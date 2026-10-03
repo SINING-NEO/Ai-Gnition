@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Syne, Figtree } from "next/font/google";
+import { Lexend, Inter } from "next/font/google";
 import { AppShell } from "@/components/layout/AppShell";
 import "./globals.css";
 
-const display = Syne({
+const display = Lexend({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["400", "500", "600"],
 });
 
-const body = Figtree({
+const body = Inter({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],

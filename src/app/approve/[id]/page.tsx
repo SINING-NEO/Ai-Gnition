@@ -1,8 +1,15 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, Info, ShieldCheck } from "lucide-react";
 import type { RiskReport, RunLogEntry, WorkflowSpec } from "@/lib/types";
+
+const LEVEL_COLOR = {
+  low: "var(--green)",
+  medium: "var(--orange)",
+  high: "var(--orange)",
+} as const;
 
 type Workflow = {
   id: string;
@@ -96,97 +103,144 @@ export default function ApprovePage() {
   }
 
   if (!workflow && error) {
-    return <p className="text-ember-hot">{error}</p>;
+    return <p className="card p-6 text-orange">{error}</p>;
   }
-  if (!workflow) return <p className="text-mist">Guardian is reviewing…</p>;
+  if (!workflow) return <p className="card p-6 text-muted">Guardian is reviewing…</p>;
 
   const report = workflow.riskReport;
+  const flags = report?.flags ?? [];
+  const overall = report?.overall ?? "low";
 
   return (
-    <div className="animate-rise relative z-10 space-y-8">
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-ember-hot">Guardian</p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-extrabold text-fog">
-          {workflow.name}
-        </h1>
-        <p className="mt-3 max-w-2xl text-mist">{workflow.description}</p>
+    <div className="animate-rise mx-auto max-w-5xl space-y-6">
+      <div className="relative flex items-center justify-center">
+        <button
+          type="button"
+          aria-label="Back to dashboard"
+          onClick={() => router.push("/")}
+          className="icon-dot absolute left-0 bg-surface hover:bg-raised"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <p className="font-display text-lg font-medium">Guardian review</p>
       </div>
 
-      {error && (
-        <p className="rounded-lg border border-ember/40 bg-ember/10 px-4 py-3 text-sm text-ember-hot">
-          {error}
+      <div className="text-center">
+        <h1 className="font-display text-3xl font-medium md:text-4xl">{workflow.name}</h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted">
+          {workflow.description}
         </p>
+      </div>
+
+      {flags.length > 0 && workflow.status === "pending_approval" && (
+        <div className="flex items-start gap-3 rounded-2xl bg-lime p-4 text-bg">
+          <Info className="mt-0.5 h-5 w-5 shrink-0" />
+          <div className="text-sm">
+            <p className="font-medium">
+              Guardian found {flags.length} step{flags.length > 1 ? "s" : ""} that change
+              data or contact people. Nothing runs until you approve.
+            </p>
+          </div>
+        </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-bold">
-            Risk report · {report?.overall ?? "low"}
-          </h2>
-          <ul className="mt-4 space-y-3">
-            {(report?.flags ?? []).length === 0 && (
-              <li className="text-sm text-mist">No elevated risks detected.</li>
+      {error && (
+        <p className="rounded-2xl bg-orange/15 px-4 py-3 text-sm text-orange">{error}</p>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="card p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl font-medium">Risk report</h2>
+            <span
+              className="chip capitalize"
+              style={{ color: LEVEL_COLOR[overall] }}
+            >
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: LEVEL_COLOR[overall] }}
+              />
+              {overall}
+            </span>
+          </div>
+
+          <ul className="mt-5 space-y-2">
+            {flags.length === 0 && (
+              <li className="tile flex items-center gap-3 bg-raised p-3 text-sm">
+                <ShieldCheck className="h-4 w-4 text-green" />
+                No elevated risks detected.
+              </li>
             )}
-            {(report?.flags ?? []).map((f) => (
+            {flags.map((f) => (
               <li
                 key={f.stepId + f.reason}
-                className="border-l-2 border-ember pl-3 text-sm text-mist"
+                className="flex items-start gap-3 rounded-xl bg-raised p-3 text-sm"
               >
-                <span className="uppercase tracking-wider text-ember-hot">{f.level}</span>
-                <p className="mt-1">{f.reason}</p>
+                <span
+                  className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                  style={{ background: LEVEL_COLOR[f.level] }}
+                />
+                <span>{f.reason}</span>
               </li>
             ))}
           </ul>
-          <h3 className="mt-6 text-sm uppercase tracking-[0.16em] text-mist/70">
-            Dry-run preview
-          </h3>
-          <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-mist">
-            {(report?.dryRunPreview ?? []).map((line) => (
-              <li key={line}>{line}</li>
+
+          <h3 className="mt-6 text-sm font-medium text-muted">Dry-run preview</h3>
+          <ol className="mt-3 space-y-2">
+            {(report?.dryRunPreview ?? []).map((line, i) => (
+              <li key={line} className="flex gap-3 text-sm">
+                <span className="font-display w-5 shrink-0 text-lime">{i + 1}</span>
+                <span className="text-muted">{line}</span>
+              </li>
             ))}
           </ol>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-ink/40 p-5">
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-bold">
-            Live execution log
-          </h2>
-          <div className="mt-4 max-h-[320px] space-y-2 overflow-y-auto font-mono text-xs">
+        <div className="card flex flex-col p-6">
+          <h2 className="font-display text-xl font-medium">Live execution</h2>
+          <div className="mt-5 max-h-[360px] flex-1 space-y-2 overflow-y-auto">
             {log.length === 0 && (
-              <p className="text-mist/60">
+              <p className="rounded-xl bg-raised p-4 text-sm text-muted">
                 {running ? "Agents spinning up…" : "Approve to watch the Executor work."}
               </p>
             )}
-            {log.map((entry, i) => (
-              <div
-                key={`${entry.ts}-${i}`}
-                className={`log-line flex gap-2 ${
-                  entry.level === "success"
-                    ? "text-leaf"
-                    : entry.level === "error"
-                      ? "text-ember-hot"
-                      : "text-mist"
-                }`}
-              >
-                <span className="shrink-0 text-mist/40">
-                  {new Date(entry.ts).toLocaleTimeString()}
-                </span>
-                <span className="shrink-0 text-fog/80">[{entry.agent}]</span>
-                <span>{entry.message}</span>
-              </div>
-            ))}
+            {log.map((entry, i) => {
+              const color =
+                entry.level === "success"
+                  ? "var(--green)"
+                  : entry.level === "error"
+                    ? "var(--orange)"
+                    : "var(--muted)";
+              return (
+                <div
+                  key={`${entry.ts}-${i}`}
+                  className="log-line flex items-start gap-3 rounded-xl bg-raised px-3 py-2.5 text-sm"
+                >
+                  <span
+                    className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: color }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p>{entry.message}</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {entry.agent} · {new Date(entry.ts).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="mx-auto flex max-w-md flex-col gap-3">
         {workflow.status === "pending_approval" && (
           <button
             type="button"
             data-testid="approve-run"
             disabled={running}
             onClick={() => void approve()}
-            className="relative z-20 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white hover:bg-ember-hot disabled:opacity-50"
+            className="btn btn-primary w-full"
           >
             {running ? "Running…" : "Approve & run"}
           </button>
@@ -196,7 +250,7 @@ export default function ApprovePage() {
             type="button"
             data-testid="run-now"
             onClick={() => void startRun(workflow.id)}
-            className="relative z-20 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white hover:bg-ember-hot"
+            className="btn btn-primary w-full"
           >
             {log.length ? "Run again" : "Run now"}
           </button>
@@ -204,16 +258,9 @@ export default function ApprovePage() {
         <button
           type="button"
           onClick={() => router.push(`/studio/${workflow.id}`)}
-          className="rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-fog hover:bg-white/10"
+          className="btn btn-ghost w-full"
         >
           Open studio
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-fog hover:bg-white/10"
-        >
-          Dashboard
         </button>
       </div>
     </div>

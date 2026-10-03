@@ -1,16 +1,22 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Bell } from "lucide-react";
 import { PatternCard, type PatternCardData } from "./PatternCard";
 import { TimeMeter } from "./TimeMeter";
+import { StatTiles } from "./StatTiles";
 import { ActivityFeed } from "./ActivityFeed";
+import { Highlight } from "@/components/ui/Squiggle";
 
 type Stats = {
   potentialMinutesPerWeek: number;
   savedMinutes: number;
   eventCount: number;
   patternCount: number;
+  workflowCount: number;
+  runCount: number;
 };
 
 type EventRow = {
@@ -57,7 +63,7 @@ export function DashboardClient() {
     void load();
   }, []);
 
-  async function reseeds() {
+  async function reseed() {
     startTransition(async () => {
       await fetch("/api/seed", { method: "POST" });
       await load();
@@ -76,46 +82,53 @@ export function DashboardClient() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed");
       const wf = json.workflow;
-      if (wf.status === "pending_approval") {
-        router.push(`/approve/${wf.id}`);
-      } else {
-        router.push(`/studio/${wf.id}`);
-      }
+      router.push(wf.status === "pending_approval" ? `/approve/${wf.id}` : `/studio/${wf.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Automate failed");
       setBusyId(null);
     }
   }
 
+  const today = new Date().toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "long",
+  });
+
   return (
     <div className="space-y-10">
-      <section className="animate-rise grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-end">
+      <section className="animate-rise flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm uppercase tracking-[0.22em] text-leaf">
-            For Priya · Ops
+          <h1 className="font-display text-3xl font-medium md:text-4xl">Hi, Priya!</h1>
+          <p className="mt-1 text-sm text-muted">{today}</p>
+        </div>
+        <span className="icon-dot bg-surface">
+          <Bell className="h-5 w-5 text-muted" />
+        </span>
+      </section>
+
+      <section className="animate-rise grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+        <div>
+          <h2 className="font-display max-w-xl text-4xl font-normal leading-[1.15] md:text-5xl">
+            Stop doing the same thing <Highlight>twice</Highlight>
+          </h2>
+          <p className="mt-6 max-w-lg text-base leading-relaxed text-muted">
+            OneLastThing notices the routine you stopped seeing, then agents{" "}
+            <span className="text-violet">propose, build and run</span> the automation.
+            You only approve.
           </p>
-          <h1 className="mt-3 max-w-xl font-[family-name:var(--font-display)] text-4xl font-extrabold leading-[1.05] tracking-tight text-fog md:text-6xl">
-            OneLastThing
-          </h1>
-          <p className="mt-4 max-w-lg text-lg leading-relaxed text-mist">
-            It notices the grind you stopped seeing — then agents propose, build,
-            and run the automation. You only approve.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-7 flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => void reseeds()}
+              onClick={() => void reseed()}
               disabled={pending || loading}
-              className="rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-fog transition hover:bg-white/10 disabled:opacity-50"
+              className="btn btn-primary"
             >
-              {pending ? "Seeding week…" : "Load Priya's week"}
+              {pending ? "Loading week…" : "Load Priya's week"}
             </button>
-            <a
-              href="/chat"
-              className="rounded-full bg-fog px-5 py-2.5 text-sm font-semibold text-ink transition hover:bg-sand"
-            >
+            <Link href="/chat" className="btn btn-ghost">
               Ask in plain English
-            </a>
+            </Link>
           </div>
         </div>
         {stats && (
@@ -126,30 +139,32 @@ export function DashboardClient() {
         )}
       </section>
 
+      {stats && (
+        <section className="animate-rise-delay-1">
+          <StatTiles stats={stats} />
+        </section>
+      )}
+
       {error && (
-        <p className="rounded-lg border border-ember/40 bg-ember/10 px-4 py-3 text-sm text-ember-hot">
-          {error}
-        </p>
+        <p className="rounded-2xl bg-orange/15 px-4 py-3 text-sm text-orange">{error}</p>
       )}
 
       <section className="animate-rise-delay-2">
-        <div className="mb-2 flex items-baseline justify-between gap-4">
-          <h2 className="font-[family-name:var(--font-display)] text-xl font-bold text-fog">
-            Detected patterns
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <h2 className="font-display text-2xl font-medium">
+            Detected <span className="text-violet">patterns</span>
           </h2>
-          <span className="text-sm text-mist/70">
+          <span className="text-sm text-muted">
             {loading ? "Scanning…" : `${patterns.length} loops this week`}
           </span>
         </div>
-        <div className="border-t border-white/15">
-          {loading && (
-            <p className="py-10 text-mist/70">Mining activity sequences…</p>
-          )}
-          {!loading && patterns.length === 0 && (
-            <p className="py-10 text-mist/70">
-              No patterns yet. Load Priya&apos;s seeded week to begin.
-            </p>
-          )}
+        {loading && <p className="card p-6 text-muted">Mining activity sequences…</p>}
+        {!loading && patterns.length === 0 && (
+          <p className="card p-6 text-muted">
+            No patterns yet. Load Priya&apos;s week to begin.
+          </p>
+        )}
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {patterns.map((p) => (
             <PatternCard
               key={p.id}

@@ -12,39 +12,40 @@ import {
 import "@xyflow/react/dist/style.css";
 import type { WorkflowSpec } from "@/lib/types";
 
+const RISK_ACCENT = {
+  low: "#4ac067",
+  medium: "#ff7043",
+  high: "#ff7043",
+} as const;
+
 export function WorkflowGraph({ spec }: { spec: WorkflowSpec }) {
   const { nodes, edges } = useMemo(() => {
     const triggerNode: Node = {
       id: "trigger",
-      position: { x: 40, y: 120 },
+      position: { x: 40, y: 110 },
       data: { label: `Trigger\n${spec.trigger.description}` },
-      style: nodeStyle("#2a9d8f"),
-      type: "default",
+      style: { ...nodeStyle(), background: "#ecfe72", color: "#17181c", fontWeight: 600 },
     };
 
     const stepNodes: Node[] = spec.steps.map((s, i) => ({
       id: s.id,
       position: { x: 280 + i * 220, y: 100 },
-      data: { label: `${s.label}\n(${s.tool}) · ${s.risk}` },
-      style: nodeStyle(
-        s.risk === "high" ? "#e85d04" : s.risk === "medium" ? "#d4a373" : "#1b6b62",
-      ),
+      data: { label: `${s.label}\n${s.tool} · ${s.risk}` },
+      style: { ...nodeStyle(), borderLeft: `4px solid ${RISK_ACCENT[s.risk]}` },
     }));
 
+    const edgeStyle = {
+      markerEnd: { type: MarkerType.ArrowClosed, color: "#8766eb" },
+      style: { stroke: "#8766eb", strokeWidth: 2 },
+    };
+
     const edges: Edge[] = [
-      {
-        id: "e-trigger",
-        source: "trigger",
-        target: spec.steps[0]?.id,
-        markerEnd: { type: MarkerType.ArrowClosed, color: "#c5ddd7" },
-        style: { stroke: "#c5ddd7" },
-      },
+      { id: "e-trigger", source: "trigger", target: spec.steps[0]?.id, ...edgeStyle },
       ...spec.steps.slice(0, -1).map((s, i) => ({
         id: `e-${s.id}`,
         source: s.id,
         target: spec.steps[i + 1].id,
-        markerEnd: { type: MarkerType.ArrowClosed, color: "#c5ddd7" },
-        style: { stroke: "#c5ddd7" },
+        ...edgeStyle,
       })),
     ];
 
@@ -52,7 +53,7 @@ export function WorkflowGraph({ spec }: { spec: WorkflowSpec }) {
   }, [spec]);
 
   return (
-    <div className="h-[340px] w-full overflow-hidden rounded-2xl border border-white/10 bg-ink/50">
+    <div className="card h-[360px] w-full overflow-hidden">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -62,21 +63,22 @@ export function WorkflowGraph({ spec }: { spec: WorkflowSpec }) {
         nodesConnectable={false}
         elementsSelectable={false}
       >
-        <Background color="#2a9d8f" gap={22} size={1} />
+        <Background color="#424349" gap={22} size={1} />
         <Controls showInteractive={false} />
       </ReactFlow>
     </div>
   );
 }
 
-function nodeStyle(accent: string): React.CSSProperties {
+function nodeStyle(): React.CSSProperties {
   return {
-    background: "#143039",
-    color: "#e8f2f0",
-    border: `1px solid ${accent}`,
-    borderRadius: 12,
-    padding: 10,
+    background: "#2e2f36",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: 14,
+    padding: 12,
     fontSize: 12,
+    lineHeight: 1.4,
     whiteSpace: "pre-line",
     width: 180,
     fontFamily: "var(--font-body), sans-serif",

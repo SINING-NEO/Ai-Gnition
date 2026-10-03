@@ -1,6 +1,7 @@
 "use client";
 
 import { formatHours } from "@/lib/utils";
+import { ProgressRing } from "@/components/ui/ProgressRing";
 
 export function TimeMeter({
   potentialMinutes,
@@ -10,40 +11,21 @@ export function TimeMeter({
   savedMinutes: number;
 }) {
   const pct = potentialMinutes
-    ? Math.min(100, Math.round((savedMinutes / potentialMinutes) * 100))
+    ? Math.min(100, (savedMinutes / potentialMinutes) * 100)
     : 0;
+  const leftMinutes = Math.max(0, potentialMinutes - savedMinutes);
 
   return (
-    <div className="animate-rise-delay-1 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.03] p-5 backdrop-blur">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-mist/70">
-            Time reclaimed
-          </p>
-          <p className="mt-1 font-[family-name:var(--font-display)] text-4xl font-bold text-fog">
-            {formatHours(savedMinutes)}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs uppercase tracking-[0.18em] text-mist/70">
-            Spotted / week
-          </p>
-          <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-semibold text-ember-hot">
-            {formatHours(potentialMinutes)}
-          </p>
-        </div>
+    <div className="card animate-rise-delay-1 flex items-center justify-between gap-6 p-6">
+      <div className="min-w-0">
+        <p className="font-display text-2xl font-medium">Time reclaimed</p>
+        <p className="mt-2 text-lg">
+          <span className="font-semibold text-green">{formatHours(savedMinutes)}</span>
+          <span className="text-muted"> of {formatHours(potentialMinutes)} / week</span>
+        </p>
+        <span className="chip mt-4">{formatHours(leftMinutes)} left to automate</span>
       </div>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-ink/60">
-        <div
-          className="meter-bar h-full rounded-full bg-gradient-to-r from-leaf to-ember"
-          style={{ width: `${Math.max(pct, savedMinutes > 0 ? 8 : 0)}%` }}
-        />
-      </div>
-      <p className="mt-2 text-sm text-mist/80">
-        {savedMinutes > 0
-          ? `${pct}% of this week's detected grind already automated.`
-          : "Approve a workflow and watch this meter climb."}
-      </p>
+      <ProgressRing value={pct} />
     </div>
   );
 }

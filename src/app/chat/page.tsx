@@ -2,14 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowUp } from "lucide-react";
+import { Highlight } from "@/components/ui/Squiggle";
 
 type Msg = { role: "user" | "assistant"; text: string };
 
+const SUGGESTIONS = [
+  "Every Friday send my team a status summary from the Orders sheet.",
+  "Copy new order emails into the Orders sheet.",
+  "Book a follow-up after every client call.",
+];
+
 export default function ChatPage() {
   const router = useRouter();
-  const [input, setInput] = useState(
-    "Every Friday send my team a status summary from the Orders sheet.",
-  );
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "assistant",
@@ -19,8 +25,8 @@ export default function ChatPage() {
   const [busy, setBusy] = useState(false);
   const [workflowId, setWorkflowId] = useState<string | null>(null);
 
-  async function send() {
-    const message = input.trim();
+  async function send(text?: string) {
+    const message = (text ?? input).trim();
     if (!message || busy) return;
     setBusy(true);
     setMessages((m) => [...m, { role: "user", text: message }]);
@@ -53,32 +59,52 @@ export default function ChatPage() {
 
   return (
     <div className="animate-rise mx-auto max-w-2xl space-y-8">
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-leaf">Ask to automate</p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-extrabold text-fog">
-          OneLastThing
+      <div className="text-center">
+        <h1 className="font-display text-4xl font-normal leading-tight md:text-5xl">
+          Just <Highlight>ask</Highlight> to automate
         </h1>
-        <p className="mt-3 text-mist">
-          Skip the pattern hunt — describe the loop and the Architect drafts a workflow.
+        <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed text-muted">
+          Skip the pattern hunt. Describe the loop and the{" "}
+          <span className="text-violet">Architect</span> drafts a workflow.
         </p>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+      <div className="card space-y-3 p-5">
         {messages.map((m, i) => (
           <div
             key={i}
             className={
               m.role === "user"
-                ? "ml-8 rounded-2xl rounded-tr-sm bg-ember/20 px-4 py-3 text-fog"
-                : "mr-8 rounded-2xl rounded-tl-sm bg-ink/50 px-4 py-3 text-mist"
+                ? "ml-10 rounded-2xl rounded-br-md bg-lime px-4 py-3 text-sm font-medium text-bg"
+                : "mr-10 rounded-2xl rounded-bl-md bg-raised px-4 py-3 text-sm"
             }
           >
             {m.text}
           </div>
         ))}
+        {busy && (
+          <div className="mr-10 rounded-2xl rounded-bl-md bg-raised px-4 py-3 text-sm text-muted">
+            Architecting…
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      {messages.length === 1 && (
+        <div className="flex flex-wrap justify-center gap-2">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => void send(s)}
+              className="chip transition hover:bg-line"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="tile flex items-center gap-2 p-2 pl-5">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -86,31 +112,32 @@ export default function ChatPage() {
             if (e.key === "Enter") void send();
           }}
           placeholder="Describe a repetitive task…"
-          className="flex-1 rounded-full border border-white/15 bg-ink/40 px-5 py-3 text-sm text-fog outline-none ring-ember/40 placeholder:text-mist/40 focus:ring-2"
+          className="h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
         />
         <button
           type="button"
-          disabled={busy}
+          aria-label="Send"
+          disabled={busy || !input.trim()}
           onClick={() => void send()}
-          className="rounded-full bg-ember px-6 py-3 text-sm font-semibold text-white hover:bg-ember-hot disabled:opacity-50"
+          className="btn btn-primary h-11 w-11 px-0"
         >
-          {busy ? "Architecting…" : "Send"}
+          <ArrowUp className="h-5 w-5" />
         </button>
       </div>
 
       {workflowId && (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
             onClick={() => router.push(`/approve/${workflowId}`)}
-            className="rounded-full bg-fog px-5 py-2.5 text-sm font-semibold text-ink hover:bg-sand"
+            className="btn btn-primary flex-1"
           >
             Review & approve
           </button>
           <button
             type="button"
             onClick={() => router.push(`/studio/${workflowId}`)}
-            className="rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-fog hover:bg-white/10"
+            className="btn btn-ghost flex-1"
           >
             Open studio
           </button>

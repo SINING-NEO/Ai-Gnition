@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { WorkflowGraph } from "@/components/workflow/WorkflowGraph";
 import type { WorkflowSpec, RiskReport } from "@/lib/types";
 
@@ -32,50 +33,43 @@ export default function StudioPage() {
     })();
   }, [id]);
 
-  if (error) {
-    return <p className="text-ember-hot">{error}</p>;
-  }
-  if (!workflow) {
-    return <p className="text-mist">Loading studio…</p>;
-  }
+  if (error) return <p className="card p-6 text-orange">{error}</p>;
+  if (!workflow) return <p className="card p-6 text-muted">Loading studio…</p>;
 
   return (
-    <div className="animate-rise space-y-8">
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-leaf">Workflow Studio</p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-extrabold text-fog">
-          {workflow.name}
-        </h1>
-        <p className="mt-3 max-w-2xl text-mist">{workflow.description}</p>
+    <div className="animate-rise space-y-6">
+      <div className="relative flex items-center justify-center">
+        <button
+          type="button"
+          aria-label="Back to dashboard"
+          onClick={() => router.push("/")}
+          className="icon-dot absolute left-0 bg-surface hover:bg-raised"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <p className="font-display text-lg font-medium">Workflow studio</p>
+      </div>
+
+      <div className="text-center">
+        <h1 className="font-display text-3xl font-medium md:text-4xl">{workflow.name}</h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted">
+          {workflow.description}
+        </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <span className="chip">{workflow.spec.trigger.description}</span>
+          <span className="chip">{workflow.spec.steps.length} steps</span>
+        </div>
       </div>
 
       <WorkflowGraph spec={workflow.spec} />
 
-      <div className="flex flex-wrap gap-3">
-        {workflow.status === "pending_approval" && (
-          <button
-            type="button"
-            onClick={() => router.push(`/approve/${workflow.id}`)}
-            className="rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white hover:bg-ember-hot"
-          >
-            Review with Guardian
-          </button>
-        )}
-        {workflow.status === "approved" && (
-          <button
-            type="button"
-            onClick={() => router.push(`/approve/${workflow.id}`)}
-            className="rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white hover:bg-ember-hot"
-          >
-            Run workflow
-          </button>
-        )}
+      <div className="mx-auto flex max-w-md flex-col gap-3">
         <button
           type="button"
-          onClick={() => router.push("/")}
-          className="rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-fog hover:bg-white/10"
+          onClick={() => router.push(`/approve/${workflow.id}`)}
+          className="btn btn-primary w-full"
         >
-          Back to patterns
+          {workflow.status === "pending_approval" ? "Review with Guardian" : "Run workflow"}
         </button>
       </div>
     </div>
