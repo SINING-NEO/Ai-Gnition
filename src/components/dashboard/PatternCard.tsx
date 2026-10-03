@@ -49,9 +49,10 @@ export function PatternCard({
       </div>
       <button
         type="button"
+        data-testid={`automate-${pattern.id}`}
         disabled={busy}
         onClick={() => onAutomate(pattern.id)}
-        className="mt-4 shrink-0 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ember-hot disabled:cursor-not-allowed disabled:opacity-50 md:mt-0 animate-pulse-glow disabled:animate-none"
+        className="relative z-20 mt-4 shrink-0 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ember-hot disabled:cursor-not-allowed disabled:opacity-50 md:mt-0"
       >
         {busy ? "Architecting…" : label}
       </button>

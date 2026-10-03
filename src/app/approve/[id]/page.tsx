@@ -95,13 +95,15 @@ export default function ApprovePage() {
     }
   }
 
-  if (error) return <p className="text-ember-hot">{error}</p>;
+  if (!workflow && error) {
+    return <p className="text-ember-hot">{error}</p>;
+  }
   if (!workflow) return <p className="text-mist">Guardian is reviewing…</p>;
 
   const report = workflow.riskReport;
 
   return (
-    <div className="animate-rise space-y-8">
+    <div className="animate-rise relative z-10 space-y-8">
       <div>
         <p className="text-xs uppercase tracking-[0.2em] text-ember-hot">Guardian</p>
         <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-extrabold text-fog">
@@ -109,6 +111,12 @@ export default function ApprovePage() {
         </h1>
         <p className="mt-3 max-w-2xl text-mist">{workflow.description}</p>
       </div>
+
+      {error && (
+        <p className="rounded-lg border border-ember/40 bg-ember/10 px-4 py-3 text-sm text-ember-hot">
+          {error}
+        </p>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -175,20 +183,22 @@ export default function ApprovePage() {
         {workflow.status === "pending_approval" && (
           <button
             type="button"
+            data-testid="approve-run"
             disabled={running}
             onClick={() => void approve()}
-            className="animate-pulse-glow rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white hover:bg-ember-hot disabled:opacity-50"
+            className="relative z-20 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white hover:bg-ember-hot disabled:opacity-50"
           >
-            Approve & run
+            {running ? "Running…" : "Approve & run"}
           </button>
         )}
-        {workflow.status === "approved" && !running && log.length === 0 && (
+        {workflow.status === "approved" && !running && (
           <button
             type="button"
+            data-testid="run-now"
             onClick={() => void startRun(workflow.id)}
-            className="rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white hover:bg-ember-hot"
+            className="relative z-20 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white hover:bg-ember-hot"
           >
-            Run now
+            {log.length ? "Run again" : "Run now"}
           </button>
         )}
         <button
