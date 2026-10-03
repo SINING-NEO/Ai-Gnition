@@ -2,13 +2,25 @@ import { GoogleGenAI } from "@google/genai";
 
 const DEFAULT_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
 
+/**
+ * LLM calls are OFF by default to avoid surprise API spend.
+ * Enable only when both are set:
+ *   USE_GEMINI=1
+ *   GEMINI_API_KEY=...
+ */
+export function geminiEnabled() {
+  const flag = (process.env.USE_GEMINI ?? "").trim().toLowerCase();
+  const on = flag === "1" || flag === "true" || flag === "yes";
+  return on && Boolean(process.env.GEMINI_API_KEY?.trim());
+}
+
 export function hasGeminiKey() {
-  return Boolean(process.env.GEMINI_API_KEY?.trim());
+  return geminiEnabled();
 }
 
 export function getGemini() {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) return null;
+  if (!geminiEnabled()) return null;
+  const apiKey = process.env.GEMINI_API_KEY!.trim();
   return new GoogleGenAI({ apiKey });
 }
 
