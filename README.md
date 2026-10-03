@@ -8,13 +8,13 @@ Hackathon plan: [`docs/PLAN.md`](./docs/PLAN.md)
 
 ```bash
 npm install
-cp .env.example .env.local   # optional: add GEMINI_API_KEY
+cp .env.example .env.local   # leave USE_GEMINI=0 unless you want paid LLM calls
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000), click **Load Priya's week**, then **Automate** on a pattern.
 
-Demo mode works without a Gemini key (deterministic Architect / Pattern Hunter fallbacks).
+**Cost control:** Gemini is disabled unless `USE_GEMINI=1` *and* `GEMINI_API_KEY` are set. Default path uses free deterministic agent fallbacks.
 
 ## What's in the MVP
 
