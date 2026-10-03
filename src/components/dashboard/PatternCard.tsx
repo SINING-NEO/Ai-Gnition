@@ -22,7 +22,12 @@ export function PatternCard({
   onAutomate: (id: string) => void;
   busy?: boolean;
 }) {
-  const automated = pattern.status === "automated" || pattern.status === "automating";
+  const label =
+    pattern.status === "automated"
+      ? "Run again"
+      : pattern.status === "automating"
+        ? "Continue"
+        : "Automate";
 
   return (
     <article className="group flex flex-col border-b border-white/10 py-6 last:border-b-0 md:flex-row md:items-end md:justify-between md:gap-8">
@@ -44,11 +49,11 @@ export function PatternCard({
       </div>
       <button
         type="button"
-        disabled={busy || automated}
+        disabled={busy}
         onClick={() => onAutomate(pattern.id)}
         className="mt-4 shrink-0 rounded-full bg-ember px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ember-hot disabled:cursor-not-allowed disabled:opacity-50 md:mt-0 animate-pulse-glow disabled:animate-none"
       >
-        {automated ? "In progress" : busy ? "Architecting…" : "Automate"}
+        {busy ? "Architecting…" : label}
       </button>
     </article>
   );

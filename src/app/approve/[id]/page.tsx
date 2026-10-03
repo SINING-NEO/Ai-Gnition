@@ -47,33 +47,52 @@ export default function ApprovePage() {
   async function startRun(workflowId: string) {
     setRunning(true);
     setLog([]);
-    const create = await fetch("/api/runs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ workflowId }),
-    });
-    const created = await create.json();
-    if (!create.ok) {
-      setError(created.error || "Could not start run");
-      setRunning(false);
-      return;
-    }
+    setError(null);
+    try {
+      const create = await fetch("/api/runs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workflowId }),
+      });
+      const created = await create.json();
+      if (!create.ok) {
+        throw new Error(created.error || "Could not start run");
+      }
 
-    const es = new EventSource(`/api/runs/${created.run.id}/stream`);
-    es.onmessage = (ev) => {
-      const payload = JSON.parse(ev.data);
-      if (payload.type === "log") {
-        setLog((prev) => [...prev, payload.entry]);
+      const res = await fetch(`/api/runs/${created.run.id}/stream`);
+      if (!res.ok || !res.body) {
+        throw new Error("Could not open execution stream");
       }
-      if (payload.type === "done" || payload.type === "error") {
-        es.close();
-        setRunning(false);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const chunks = buffer.split("\n\n");
+        buffer = chunks.pop() ?? "";
+        for (const chunk of chunks) {
+          const line = chunk
+            .split("\n")
+            .find((l) => l.startsWith("data: "));
+          if (!line) continue;
+          const payload = JSON.parse(line.slice(6));
+          if (payload.type === "log") {
+            setLog((prev) => [...prev, payload.entry]);
+          }
+          if (payload.type === "error") {
+            throw new Error(payload.message || "Execution failed");
+          }
+        }
       }
-    };
-    es.onerror = () => {
-      es.close();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Run failed");
+    } finally {
       setRunning(false);
-    };
+    }
   }
 
   if (error) return <p className="text-ember-hot">{error}</p>;
