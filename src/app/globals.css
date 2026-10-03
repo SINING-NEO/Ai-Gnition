@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #0c1a1f;
+  --ink-soft: #143039;
+  --fog: #e8f2f0;
+  --mist: #c5ddd7;
+  --ember: #e85d04;
+  --ember-hot: #ff7a1a;
+  --leaf: #2a9d8f;
+  --leaf-deep: #1b6b62;
+  --sand: #f4efe6;
+  --line: rgba(255, 255, 255, 0.12);
+  --background: var(--ink);
+  --foreground: var(--fog);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-fog: var(--fog);
+  --color-mist: var(--mist);
+  --color-ember: var(--ember);
+  --color-ember-hot: var(--ember-hot);
+  --color-leaf: var(--leaf);
+  --color-leaf-deep: var(--leaf-deep);
+  --color-sand: var(--sand);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(232, 93, 4, 0.22), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(42, 157, 143, 0.18), transparent 50%),
+    linear-gradient(165deg, #071216 0%, #0c1a1f 40%, #10262c 100%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(232, 93, 4, 0.35);
+  color: white;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(232, 93, 4, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(232, 93, 4, 0);
+  }
+}
+
+@keyframes meter-fill {
+  from {
+    width: 0%;
+  }
+}
+
+@keyframes tick {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-rise-delay-1 {
+  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+.animate-rise-delay-2 {
+  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.4s ease-out infinite;
+}
+
+.meter-bar {
+  animation: meter-fill 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.log-line {
+  animation: tick 0.35s ease-out both;
+}
